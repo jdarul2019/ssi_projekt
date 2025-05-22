@@ -138,15 +138,12 @@ def recommend_movies_bayes(df_test, X_test, model, top_n=10):
         ['title', 'vote_average', 'vote_count', 'genres', 'bayes_score']
     ]
 #%%
-from sklearn.preprocessing import MinMaxScaler
 
 def decision_module(soft_df, bayes_df, n=10):
     merged = pd.merge(
         soft_df, bayes_df, on='title', suffixes=('_soft', '_bayes')
     )
 
-    # scaler = MinMaxScaler()
-    # merged[['user_score', 'bayes_score']] = scaler.fit_transform(merged[['user_score', 'bayes_score']])
     merged['avg_score'] = 0.7 * merged['user_score'] + 0.3 * merged['bayes_score']
 
     merged = merged.sort_values('avg_score', ascending=False)
@@ -165,7 +162,6 @@ user_input = st.text_input("Wprowadź swoje zainteresowania (oddzielone przecink
 if st.button("Rekomenduj filmy"):
     user_keywords = [x.strip().lower() for x in user_input.split(",") if x.strip()]
     user_prefs = set(user_keywords)
-    #user_prefs = {'war', 'space', 'science fiction', 'love'}
 
     df_copy = df.copy()
     df_copy['token_set'] = df_copy['combined'].apply(lambda x: set(x.lower().split()))
@@ -182,10 +178,8 @@ if st.button("Rekomenduj filmy"):
 
     df_copy['title_match'] = df_copy.apply(lambda row: title_bonus(row, user_keywords), axis=1)
 
-    #SoftSet
     recommended_soft = recommend_movies_soft(df_copy.copy(), user_prefs, top_n=len(df_copy))
 
-    # Bayes
     X_bayes = df_copy[['vote_average', 'vote_count']].values.tolist()
     probas = model.predict_proba(X_bayes)
     df_copy['bayes_score'] = [p.get(1, 0) for p in probas]
